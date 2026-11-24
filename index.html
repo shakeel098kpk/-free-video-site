@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مفت ویڈیو بنائیں</title>
+<style>
+  body { font-family: 'Noto Nastaliq Urdu', Tahoma, sans-serif; background:#f4f6fb; margin:0; padding:20px; color:#222; }
+  .box { max-width:600px; margin:auto; background:#fff; padding:24px; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.1); }
+  h1 { font-size:24px; text-align:center; }
+  label { display:block; margin:14px 0 6px; font-weight:bold; }
+  textarea, select { width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; }
+  textarea { min-height:140px; }
+  button { width:100%; margin-top:18px; padding:14px; font-size:18px; background:#2563eb; color:#fff; border:0; border-radius:10px; cursor:pointer; }
+  button:disabled { background:#999; }
+  #msg { margin-top:16px; text-align:center; line-height:1.8; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>کہانی یا موضوع سے ویڈیو بنائیں</h1>
+
+  <label>کیا لکھ رہے ہیں؟</label>
+  <select id="mode">
+    <option value="topic">موضوع</option>
+    <option value="story">کہانی</option>
+  </select>
+
+  <label>متن</label>
+  <textarea id="text" placeholder="یہاں اپنا موضوع یا کہانی لکھیں"></textarea>
+
+  <label>زبان</label>
+  <select id="lang">
+    <option value="ur">اردو</option>
+    <option value="en">انگریزی</option>
+  </select>
+
+  <button id="go">ویڈیو بنائیں</button>
+  <div id="msg"></div>
+</div>
+
+<script>
+const WORKER_URL = 'یہاں اپنے Worker کا لنک لکھیں';
+
+const btn = document.getElementById('go');
+const msg = document.getElementById('msg');
+
+btn.addEventListener('click', async () => {
+  const text = document.getElementById('text').value.trim();
+  if (text.length < 3) { msg.textContent = 'پہلے کچھ لکھیں'; return; }
+
+  btn.disabled = true;
+  msg.textContent = 'درخواست بھیجی جا رہی ہے...';
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: document.getElementById('mode').value,
+        text: text,
+        lang: document.getElementById('lang').value,
+      }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      msg.textContent = 'آپ کی ویڈیو بننا شروع ہو گئی ہے۔ اس میں تقریباً دس منٹ لگیں گے۔';
+    } else {
+      msg.textContent = 'کچھ مسئلہ آیا، دوبارہ کوشش کریں۔';
+    }
+  } catch (e) {
+    msg.textContent = 'رابطہ نہیں ہو سکا۔';
+  }
+  btn.disabled = false;
+});
+</script>
+</body>
+</html>
