@@ -1,78 +1,71 @@
 <!DOCTYPE html>
 <html lang="ur" dir="rtl">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>مفت ویڈیو بنائیں</title>
+<title>Free-video</title>
 <style>
-  body { font-family: 'Noto Nastaliq Urdu', Tahoma, sans-serif; background:#f4f6fb; margin:0; padding:20px; color:#222; }
-  .box { max-width:600px; margin:auto; background:#fff; padding:24px; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.1); }
-  h1 { font-size:24px; text-align:center; }
-  label { display:block; margin:14px 0 6px; font-weight:bold; }
-  textarea, select { width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; }
-  textarea { min-height:140px; }
-  button { width:100%; margin-top:18px; padding:14px; font-size:18px; background:#2563eb; color:#fff; border:0; border-radius:10px; cursor:pointer; }
-  button:disabled { background:#999; }
-  #msg { margin-top:16px; text-align:center; line-height:1.8; }
+  body { font-family: sans-serif; background:#101820; color:#fff; margin:0; padding:16px; }
+  h1 { text-align:center; }
+  .tabs { display:flex; gap:8px; justify-content:center; margin-bottom:16px; }
+  .tabs button { padding:8px 14px; border:0; border-radius:8px; background:#223; color:#fff; }
+  .tabs button.on { background:#2a7fff; }
+  .box { max-width:520px; margin:auto; }
+  textarea, select { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:0; font-size:16px; }
+  textarea { height:140px; }
+  .go { width:100%; padding:14px; font-size:18px; border:0; border-radius:10px; background:#18b26b; color:#fff; }
+  #msg { margin-top:14px; line-height:1.8; }
+  a { color:#7fd1ff; }
 </style>
 </head>
 <body>
-<div class="box">
-  <h1>کہانی یا موضوع سے ویڈیو بنائیں</h1>
+<h1>Free-video</h1>
+<div class="tabs">
+  <button class="on" data-tab="video">ویڈیو بنائیں</button>
+</div>
 
-  <label>کیا لکھ رہے ہیں؟</label>
+<div class="box" id="tab-video">
+  <textarea id="topic" placeholder="ٹاپک یا کہانی یہاں لکھیں"></textarea>
   <select id="mode">
-    <option value="topic">موضوع</option>
+    <option value="facts">معلومات</option>
     <option value="story">کہانی</option>
   </select>
-
-  <label>متن</label>
-  <textarea id="text" placeholder="یہاں اپنا موضوع یا کہانی لکھیں"></textarea>
-
-  <label>زبان</label>
   <select id="lang">
     <option value="ur">اردو</option>
-    <option value="en">انگریزی</option>
+    <option value="en">English</option>
   </select>
-
-  <button id="go">ویڈیو بنائیں</button>
+  <button class="go" id="go">ویڈیو بنائیں</button>
   <div id="msg"></div>
 </div>
 
 <script>
-const WORKER_URL = 'یہاں اپنے Worker کا لنک لکھیں';
-
-const btn = document.getElementById('go');
-const msg = document.getElementById('msg');
-
-btn.addEventListener('click', async () => {
-  const text = document.getElementById('text').value.trim();
-  if (text.length < 3) { msg.textContent = 'پہلے کچھ لکھیں'; return; }
-
-  btn.disabled = true;
-  msg.textContent = 'درخواست بھیجی جا رہی ہے...';
-
+const REPO = 'shakeel098kpk/Free-video';
+document.getElementById('go').onclick = async () => {
+  const msg = document.getElementById('msg');
+  const topic = document.getElementById('topic').value.trim();
+  if (!topic) { msg.textContent = 'پہلے ٹاپک لکھیں'; return; }
+  msg.textContent = 'بھیج رہا ہوں...';
   try {
-    const res = await fetch(WORKER_URL, {
+    const r = await fetch('/api/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        topic,
         mode: document.getElementById('mode').value,
-        text: text,
-        lang: document.getElementById('lang').value,
-      }),
+        lang: document.getElementById('lang').value
+      })
     });
-    const data = await res.json();
-    if (data.ok) {
-      msg.textContent = 'آپ کی ویڈیو بننا شروع ہو گئی ہے۔ اس میں تقریباً دس منٹ لگیں گے۔';
+    const j = await r.json();
+    if (j.ok) {
+      msg.innerHTML = 'ویڈیو بننا شروع ہو گئی۔ تقریباً دس سے پندرہ منٹ لگیں گے۔<br>' +
+        '<a target="_blank" href="https://github.com/' + REPO + '/releases">تیار ویڈیو یہاں ملے گی</a>';
     } else {
-      msg.textContent = 'کچھ مسئلہ آیا، دوبارہ کوشش کریں۔';
+      msg.textContent = 'خرابی: ' + (j.detail || j.error || r.status);
     }
   } catch (e) {
-    msg.textContent = 'رابطہ نہیں ہو سکا۔';
+    msg.textContent = 'رابطہ نہیں ہو سکا: ' + e;
   }
-  btn.disabled = false;
-});
+};
 </script>
 </body>
 </html>
